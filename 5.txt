@@ -1,0 +1,201 @@
+Experiment 5
+#include <stdio.h>
+#include <stdlib.h>
+
+struct Node {
+    int seat_no;
+    struct Node *prev;
+    struct Node *next;
+};
+
+int total_rows = 10;
+int seats_per_row = 7;
+struct Node *head[10] = {NULL};
+
+struct Node* create_node(int seat_no) {
+    struct Node *p = (struct Node*) malloc(sizeof(struct Node));
+    if (p == NULL) {
+        printf("Memory allocation failed\n");
+        exit(1);
+    }
+    p->seat_no = seat_no;
+    p->prev = NULL;
+    p->next = NULL;
+    return p;
+}
+
+void create_theater() {
+    int r, s;
+    for (r = 0; r < total_rows; r++) {
+        head[r] = NULL;
+        for (s = 1; s <= seats_per_row; s++) {
+            struct Node *n = create_node(s);
+            if (head[r] == NULL) {
+                head[r] = n;
+            } else {
+                struct Node *t = head[r];
+                while (t->next != NULL)
+                    t = t->next;
+                t->next = n;
+                n->prev = t;
+            }
+        }
+    }
+}
+
+void remove_node(int row, struct Node *node) {
+    if (node == NULL)
+        return;
+
+    if (node->prev != NULL)
+        node->prev->next = node->next;
+    else
+        head[row] = node->next;
+
+    if (node->next != NULL)
+        node->next->prev = node->prev;
+
+    free(node);
+}
+
+void insert_sorted(int row, int seat_no) {
+    struct Node *n = create_node(seat_no);
+    struct Node *curr = head[row];
+
+    if (curr == NULL || seat_no < curr->seat_no) {
+        n->next = head[row];
+        if (head[row] != NULL)
+            head[row]->prev = n;
+        head[row] = n;
+        return;
+    }
+
+    while (curr->next != NULL && curr->next->seat_no < seat_no)
+        curr = curr->next;
+
+    n->next = curr->next;
+    if (curr->next != NULL)
+        curr->next->prev = n;
+    curr->next = n;
+    n->prev = curr;
+}
+
+void display_available() {
+    int r;
+    printf("\nAvailable Seats:\n");
+    for (r = 0; r < total_rows; r++) {
+        printf("Row %2d: ", r + 1);
+        if (head[r] == NULL)
+            printf("None");
+        else {
+            struct Node *t = head[r];
+            while (t != NULL) {
+                printf("%d ", t->seat_no);
+                t = t->next;
+            }
+        }
+        printf("\n");
+    }
+}
+
+int book_seat(int row_index, int seat_no) {
+    if (row_index < 0 || row_index >= total_rows || seat_no < 1 || seat_no > seats_per_row)
+        return 0;
+
+    struct Node *t = head[row_index];
+    while (t != NULL && t->seat_no != seat_no)
+        t = t->next;
+
+    if (t == NULL)
+        return 0;
+
+    remove_node(row_index, t);
+    return 1;
+}
+
+int cancel_booking(int row_index, int seat_no) {
+    if (row_index < 0 || row_index >= total_rows || seat_no < 1 || seat_no > seats_per_row)
+        return 0;
+
+    struct Node *t = head[row_index];
+    while (t != NULL) {
+        if (t->seat_no == seat_no)
+            return 0;
+        t = t->next;
+    }
+
+    insert_sorted(row_index, seat_no);
+    return 1;
+}
+
+void free_all() {
+    int r;
+    for (r = 0; r < total_rows; r++) {
+        struct Node *t = head[r];
+        while (t != NULL) {
+            struct Node *next = t->next;
+            free(t);
+            t = next;
+        }
+        head[r] = NULL;
+    }
+}
+
+int main() {
+    int choice, row, seat;
+
+    create_theater();
+
+    while (1) {
+        printf("\n--- CINEMAX Ticket Booking System ---\n");
+        printf("1. Display available seats\n");
+        printf("2. Book a seat\n");
+        printf("3. Cancel a booking\n");
+        printf("4. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        if (choice == 1) {
+            display_available();
+        } else if (choice == 2) {
+            printf("Enter row (1-%d) and seat (1-%d): ", total_rows, seats_per_row);
+            scanf("%d %d", &row, &seat);
+            if (book_seat(row - 1, seat))
+                printf("Seat booked successfully (Row %d, Seat %d)\n", row, seat);
+            else
+                printf("Seat not available!\n");
+        } else if (choice == 3) {
+            printf("Enter row (1-%d) and seat (1-%d): ", total_rows, seats_per_row);
+            scanf("%d %d", &row, &seat);
+            if (cancel_booking(row - 1, seat))
+                printf("Booking cancelled (Row %d, Seat %d)\n", row, seat);
+            else
+                printf("Cancellation failed (seat may already be free)\n");
+        } else if (choice == 4) {
+            break;
+        } else {
+            printf("Invalid choice!\n");
+        }
+    }
+
+    free_all();
+    return 0;
+}
+
+
+Algorithm: 
+Create a structure Node with seat_no, prev, and next.
+
+Create an array head[10] to store head pointers for each row.
+
+Initialize 10 rows with 7 linked nodes each for free seats.
+
+Manually remove some seats to show random initial bookings.
+
+To display seats, traverse each row’s linked list and print seat numbers.
+
+To book a seat, search and delete that node from the linked list.
+
+To cancel booking, insert that seat back in sorted order.
+
+Repeat operations from the menu until exit.

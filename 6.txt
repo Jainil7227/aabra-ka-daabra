@@ -1,0 +1,178 @@
+Experiment 6 : 
+#include <stdio.h>
+
+struct CharStack {
+    char items[100];
+    int top;
+};
+
+void initChar(struct CharStack *s) { s->top = -1; }
+int isEmptyChar(struct CharStack *s) { return s->top == -1; }
+void pushChar(struct CharStack *s, char c) { s->items[++(s->top)] = c; }
+char popChar(struct CharStack *s) { return s->items[(s->top)--]; }
+char peekChar(struct CharStack *s) { return s->items[s->top]; }
+
+struct IntStack {
+    int items[100];
+    int top;
+};
+
+void initInt(struct IntStack *s) { s->top = -1; }
+int isEmptyInt(struct IntStack *s) { return s->top == -1; }
+void pushInt(struct IntStack *s, int v) { s->items[++(s->top)] = v; }
+int popInt(struct IntStack *s) { return s->items[(s->top)--]; }
+
+int isOperator(char c) {
+    return (c == '+' || c == '-' || c == '*' || c == '/' || c == '^');
+}
+
+int precedence(char c) {
+    if (c == '^') return 3;
+    if (c == '*' || c == '/') return 2;
+    if (c == '+' || c == '-') return 1;
+    return 0;
+}
+
+int isRightAssociative(char c) {
+    return (c == '^');
+}
+
+int isDigit(char c) {
+    return (c >= '0' && c <= '9');
+}
+
+void infixToPostfix(char infix[], char postfix[]) {
+    struct CharStack st;
+    initChar(&st);
+    int i = 0, k = 0;
+    char ch;
+
+    while ((ch = infix[i]) != '\0' && ch != '\n') {
+        if (isDigit(ch)) {
+            postfix[k++] = ch;
+        } 
+        else if (ch == '(') {
+            pushChar(&st, ch);
+        } 
+        else if (ch == ')') {
+            while (!isEmptyChar(&st) && peekChar(&st) != '(') {
+                postfix[k++] = popChar(&st);
+            }
+            if (!isEmptyChar(&st)) {
+                popChar(&st);
+            }
+        } 
+        else if (isOperator(ch)) {
+            while (!isEmptyChar(&st) && peekChar(&st) != '(' &&
+                   (precedence(peekChar(&st)) > precedence(ch) ||
+                   (precedence(peekChar(&st)) == precedence(ch) && !isRightAssociative(ch)))) {
+                postfix[k++] = popChar(&st);
+            }
+            pushChar(&st, ch);
+        }
+        i++;
+    }
+
+    while (!isEmptyChar(&st)) {
+        postfix[k++] = popChar(&st);
+    }
+    postfix[k] = '\0';
+}
+
+int power(int a, int b) {
+    int result = 1;
+    for (int i = 0; i < b; i++) {
+        result *= a;
+    }
+    return result;
+}
+
+int evaluatePostfix(char postfix[], int *result) {
+    struct IntStack st;
+    initInt(&st);
+    int i = 0;
+    char ch;
+
+    while ((ch = postfix[i]) != '\0') {
+        if (isDigit(ch)) {
+            pushInt(&st, ch - '0');
+        } 
+        else if (isOperator(ch)) {
+            if (isEmptyInt(&st)) {
+                printf("Error: Invalid expression\n");
+                return 0;
+            }
+            int val2 = popInt(&st);
+            
+            if (isEmptyInt(&st)) {
+                printf("Error: Invalid expression\n");
+                return 0;
+            }
+            int val1 = popInt(&st);
+            
+            int res = 0;
+            if (ch == '+') res = val1 + val2;
+            else if (ch == '-') res = val1 - val2;
+            else if (ch == '*') res = val1 * val2;
+            else if (ch == '/') {
+                if (val2 == 0) {
+                    printf("Error: Division by zero\n");
+                    return 0;
+                }
+                res = val1 / val2;
+            }
+            else if (ch == '^') res = power(val1, val2);
+            
+            pushInt(&st, res);
+        }
+        i++;
+    }
+    
+    *result = popInt(&st);
+    return 1;
+}
+
+int main() {
+    char infix[100], postfix[100];
+    int i = 0;
+    char ch;
+
+    printf("Enter infix expression (single-digit operands, no spaces):\n");
+    printf("Example: 2+3*4 or (2+3)*4 or 2^3^2\n");
+    printf("Expression: ");
+
+    while (1) {
+        ch = getchar();
+        if (ch == '\n' || ch == EOF) {
+            infix[i] = '\0';
+            break;
+        }
+        infix[i++] = ch;
+    }
+
+    printf("\nInfix Expression: %s\n", infix);
+    
+    infixToPostfix(infix, postfix);
+    printf("Postfix Expression: %s\n", postfix);
+
+    int result;
+    if (evaluatePostfix(postfix, &result)) {
+        printf("Evaluation Result: %d (PASS)\n", result);
+    } else {
+        printf("Evaluation Result: FAIL\n");
+    }
+
+    return 0;
+}
+
+
+
+
+Algorithm: 
+1️⃣ Take infix input →
+2️⃣ Push operators, output operands using stack (respect precedence) →
+3️⃣ Form postfix expression →
+4️⃣ Scan postfix left to right →
+5️⃣ Push digits, pop two when operator, compute →
+6️⃣ Final stack value = result →
+7️⃣ Print postfix & evaluation output ✅

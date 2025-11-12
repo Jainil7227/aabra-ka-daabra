@@ -1,0 +1,310 @@
+Experiment 4
+// The Department of Computer Engineering has a student's club named 'Pinnacle Club'.
+// Students of the second, third and final year of the department can be granted
+// membership on request. Similarly one may cancel the membership of the club. First node
+// is reserved for the president of the club and the last node is reserved for the secretary of
+// the club. Write a program to maintain club member's information using singly linked
+// lists. Store student PRN and Name. Write functions to:
+// a) Add and delete the members as well as president or even secretary. b) Compute total
+// number of members of club c) Display members
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+struct member 
+{
+    int prn;
+    char name[100];
+    struct member* next;
+};
+
+// Global head pointer
+struct member* head = NULL;
+
+// Function to create a new member node
+struct member* create_member(int prn, char name[]) 
+{
+    struct member* new_member = (struct member*)malloc(sizeof(struct member));
+    new_member->prn = prn;
+    strcpy(new_member->name, name);
+    new_member->next = NULL;
+    return new_member;
+}
+
+// Function to add president (at the beginning)
+void add_president() 
+{
+    int prn;
+    char name[100];
+    printf("Enter PRN for President: ");
+    scanf("%d", &prn);
+    printf("Enter Name for President: ");
+    scanf("%s", name);
+    
+    struct member* new_president = create_member(prn, name);
+    new_president->next = head;
+    head = new_president;
+    printf("President added successfully!\n");
+}
+
+// Function to add secretary (at the end)
+void add_secretary() 
+{
+    int prn;
+    char name[100];
+    printf("Enter PRN for Secretary: ");
+    scanf("%d", &prn);
+    printf("Enter Name for Secretary: ");
+    scanf("%s", name);
+    
+    struct member* new_secretary = create_member(prn, name);
+    
+    if (head == NULL) {
+        head = new_secretary;
+    } else {
+        struct member* temp = head;
+        while (temp->next != NULL) {
+            temp = temp->next;
+        }
+        temp->next = new_secretary;
+    }
+    printf("Secretary added successfully!\n");
+}
+
+// Function to add regular member (in between president and secretary)
+void add_member() 
+{
+    int prn;
+    char name[100];
+    printf("Enter PRN for Member: ");
+    scanf("%d", &prn);
+    printf("Enter Name for Member: ");
+    scanf("%s", name);
+    
+    struct member* new_member = create_member(prn, name);
+    
+    if (head == NULL) {
+        head = new_member;
+        printf("Member added as first member!\n");
+        return;
+    }
+    
+    if (head->next == NULL) {
+        // Only president exists, add member after president
+        head->next = new_member;
+    } else {
+        // Find the second last node (before secretary)
+        struct member* temp = head;
+        while (temp->next->next != NULL) {
+            temp = temp->next;
+        }
+        new_member->next = temp->next;
+        temp->next = new_member;
+    }
+    printf("Member added successfully!\n");
+}
+
+// Function to delete president
+void delete_president() 
+{
+    if (head == NULL) {
+        printf("No members in the club!\n");
+        return;
+    }
+    
+    struct member* temp = head;
+    head = head->next;
+    free(temp);
+    printf("President removed successfully!\n");
+}
+
+// Function to delete secretary
+void delete_secretary() 
+{
+    if (head == NULL) {
+        printf("No members in the club!\n");
+        return;
+    }
+    
+    if (head->next == NULL) {
+        // Only one member (president)
+        free(head);
+        head = NULL;
+        printf("Secretary (only member) removed successfully!\n");
+        return;
+    }
+    
+    struct member* temp = head;
+    while (temp->next->next != NULL) {
+        temp = temp->next;
+    }
+    free(temp->next);
+    temp->next = NULL;
+    printf("Secretary removed successfully!\n");
+}
+
+// Function to delete member by PRN
+void delete_member() 
+{
+    int prn;
+    printf("Enter PRN of member to delete: ");
+    scanf("%d", &prn);
+    
+    if (head == NULL) {
+        printf("No members in the club!\n");
+        return;
+    }
+    
+    if (head->prn == prn) {
+        struct member* temp = head;
+        head = head->next;
+        free(temp);
+        printf("Member with PRN %d removed successfully!\n", prn);
+        return;
+    }
+    
+    struct member* temp = head;
+    while (temp->next != NULL && temp->next->prn != prn) {
+        temp = temp->next;
+    }
+    
+    if (temp->next == NULL) {
+        printf("Member with PRN %d not found!\n", prn);
+        return;
+    }
+    
+    struct member* to_delete = temp->next;
+    temp->next = to_delete->next;
+    free(to_delete);
+    printf("Member with PRN %d removed successfully!\n", prn);
+}
+
+// Function to count total members
+int count_members() 
+{
+    int count = 0;
+    struct member* temp = head;
+    while (temp != NULL) {
+        count++;
+        temp = temp->next;
+    }
+    return count;
+}
+
+// Function to display all members
+void display_members() 
+{
+    if (head == NULL) {
+        printf("No members in the club!\n");
+        return;
+    }
+    
+    printf("\n--- Pinnacle Club Members ---\n");
+    struct member* temp = head;
+    int position = 1;
+    
+    while (temp != NULL) {
+        if (position == 1) {
+            printf("President: PRN=%d, Name=%s\n", temp->prn, temp->name);
+        } else if (temp->next == NULL) {
+            printf("Secretary: PRN=%d, Name=%s\n", temp->prn, temp->name);
+        } else {
+            printf("Member %d: PRN=%d, Name=%s\n", position-1, temp->prn, temp->name);
+        }
+        temp = temp->next;
+        position++;
+    }
+    printf("Total members: %d\n", count_members());
+}
+
+int main()
+{
+    int choice, sub_choice;
+    
+    printf("=== Pinnacle Club Management System ===\n");
+    
+    do {
+        printf("\nMain Menu:\n");
+        printf("1. Add Member\n");
+        printf("2. View Members\n");
+        printf("3. Remove Member\n");
+        printf("4. Count Members\n");
+        printf("5. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+        
+        switch (choice) 
+        {
+            case 1:
+                printf("\nAdd Member Menu:\n");
+                printf("1. Add President\n");
+                printf("2. Add Member\n");
+                printf("3. Add Secretary\n");
+                printf("Enter your choice: ");
+                scanf("%d", &sub_choice);
+                
+                switch (sub_choice) {
+                    case 1:
+                        add_president();
+                        break;
+                    case 2:
+                        add_member();
+                        break;
+                    case 3:
+                        add_secretary();
+                        break;
+                    default:
+                        printf("Invalid choice!\n");
+                }
+                break;
+                
+            case 2:
+                display_members();
+                break;
+                
+            case 3:
+                printf("\nRemove Member Menu:\n");
+                printf("1. Remove President\n");
+                printf("2. Remove Member (by PRN)\n");
+                printf("3. Remove Secretary\n");
+                printf("Enter your choice: ");
+                scanf("%d", &sub_choice);
+                
+                switch (sub_choice) {
+                    case 1:
+                        delete_president();
+                        break;
+                    case 2:
+                        delete_member();
+                        break;
+                    case 3:
+                        delete_secretary();
+                        break;
+                    default:
+                        printf("Invalid choice!\n");
+                }
+                break;
+                
+            case 4:
+                printf("Total number of members: %d\n", count_members());
+                break;
+                
+            case 5:
+                printf("Thank you for using Pinnacle Club Management System!\n");
+                break;
+                
+            default:
+                printf("Invalid choice. Please try again.\n");
+        }
+    } while (choice != 5);
+    
+    // Free all allocated memory before exit
+    while (head != NULL) {
+        struct member* temp = head;
+        head = head->next;
+        free(temp);
+    }
+    
+    return 0;
+}

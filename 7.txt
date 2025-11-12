@@ -1,0 +1,113 @@
+Experiment 7 
+#include <stdio.h>
+#include <stdlib.h>
+
+int front = 0, rear = -1, count = 0, n;
+int *queue; 
+
+int isFull() {
+    return count == n;
+}
+
+int isEmpty() {
+    return count == 0;
+}
+
+void enqueue(int value) {
+    if (isFull()) {
+        printf("Queue Overflow! Cannot add order %d (Queue is full)\n", value);
+        return;
+    }
+    rear = (rear + 1) % n;
+    queue[rear] = value;
+    count++;
+    printf("Order %d placed successfully!\n", value);
+}
+
+void dequeue() {
+    if (isEmpty()) {
+        printf("Queue Underflow! No orders to serve (Queue is empty)\n");
+        return;
+    }
+    printf("Order %d served successfully!\n", queue[front]);
+    front = (front + 1) % n;
+    count--;
+}
+
+void display() {
+    if (isEmpty()) {
+        printf("Queue is empty. No orders to display.\n");
+        return;
+    }
+    printf("Orders: ");
+    int i = front;
+    for (int j = 0; j < count; j++) {
+        printf("%d ", queue[i]);
+        i = (i + 1) % n;
+    }
+    printf("\n");
+    printf("Total orders in queue: %d\n", count);
+}
+
+int main() {
+    int choice, value;
+
+    printf("Enter maximum number of orders (queue size): ");
+    scanf("%d", &n);
+
+    queue = (int *)malloc(n * sizeof(int)); 
+    
+    if (queue == NULL) {
+        printf("Memory allocation failed!\n");
+        return 1;
+    }
+
+    do {
+        printf("\n--- Pizza Parlor Job Queue ---\n");
+        printf("1. Add Order (Enqueue)\n");
+        printf("2. Serve Order (Dequeue)\n");
+        printf("3. Display Orders\n");
+        printf("4. Exit\n");
+        printf("Enter choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                printf("Enter order number to add: ");
+                scanf("%d", &value);
+                enqueue(value);
+                break;
+            case 2:
+                dequeue();
+                break;
+            case 3:
+                display();
+                break;
+            case 4:
+                printf("Exiting... Thank you!\n");
+                free(queue);
+                break;
+            default:
+                printf("Invalid choice! Try again.\n");
+        }
+    } while (choice != 4);
+
+    return 0;
+}
+
+
+
+
+
+
+
+
+Algorithm: 
+1️⃣ Start
+2️⃣ Initialize front=0, rear=-1, count=0
+3️⃣ Ask user for queue size n and create array
+4️⃣ For enqueue: if not full, add element at (rear+1)%n
+5️⃣ For dequeue: if not empty, remove element at front and move front=(front+1)%n
+6️⃣ Display queue contents
+7️⃣ Repeat until user exits
+8️⃣ Stop
